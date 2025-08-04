@@ -1,13 +1,10 @@
 from typing import NoReturn
 
-from nonebot import logger, on_command, on_regex
-from nonebot.adapters import Event as BaseEvent, Message
 from nonebot.exception import FinishedException
-from nonebot.params import CommandArg
-from nonebot.typing import T_State
 from nonebot_plugin_alconna.uniseg import UniMessage
+from nonebot_plugin_alconna import Alconna, on_alconna, Args, CommandMeta
 
-from .config import ShortcutType, config
+from .config import config
 from .draw import ServerType, draw
 
 try:
@@ -27,46 +24,15 @@ async def finish_with_query(ip: str, svr_type: ServerType) -> NoReturn:
     raise FinishedException
 
 
-motdpe_matcher = on_command(
-    "motdpe",
-    aliases={"motdbe", "!motdpe", "！motdpe", "!motdbe", "！motdbe"},
-    priority=98,
-    state={"svr_type": "be"},
-)
-motd_matcher = on_command(
+
+matcher = on_alconna(Alconna(
     "motd",
-    aliases={"!motd", "！motd", "motdje", "!motdje", "！motdje"},
-    priority=99,
-    state={"svr_type": "je"},
-)
+    Args["server_type", ServerType, "je"],
+    Args["address", str],
+    meta=CommandMeta(compact=True)
+))
 
+@matcher.handle()
+async def _(server_type: ServerType, address: str):
+    await finish_with_query(address, server_type)
 
-@motd_matcher.handle()
-@motdpe_matcher.handle()
-async def _(state: T_State, arg_msg: Message = CommandArg()):
-    arg = arg_msg.extract_plain_text().strip()
-    svr_type: ServerType = state["svr_type"]
-    await finish_with_query(arg, svr_type)
-
-
-def append_shortcut_handler(shortcut: ShortcutType):
-    async def rule(event: BaseEvent):  # type: ignore[override]
-        if not OB11GroupMessageEvent:
-            logger.warning("快捷指令群号白名单仅可在 OneBot V11 适配器下使用")
-        elif (wl := shortcut.whitelist) and isinstance(event, OB11GroupMessageEvent):
-            return event.group_id in wl
-        return True
-
-    async def handler():
-        await finish_with_query(shortcut.host, shortcut.type)
-
-    on_regex(shortcut.regex, rule=rule, priority=99).append_handler(handler)
-
-
-def startup():
-    if s := config.mcstat_shortcuts:
-        for v in s:
-            append_shortcut_handler(v)
-
-
-startup()
