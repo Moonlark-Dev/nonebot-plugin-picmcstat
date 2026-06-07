@@ -8,7 +8,11 @@ from typing_extensions import TypeAlias
 
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.motd import Motd
-from mcstatus.status_response import JavaStatusResponse
+
+try:
+    from mcstatus.status_response import JavaStatusResponse
+except ModuleNotFoundError:
+    from mcstatus.responses import JavaStatusResponse  # type: ignore[no-redef]
 from nonebot import get_driver
 from nonebot.log import logger
 from PIL.Image import Resampling
@@ -28,7 +32,10 @@ from .util import (
 )
 
 if TYPE_CHECKING:
-    from mcstatus.bedrock_status import BedrockStatusResponse
+    try:
+        from mcstatus.bedrock_status import BedrockStatusResponse
+    except ModuleNotFoundError:
+        from mcstatus.responses import BedrockStatusResponse  # type: ignore[no-redef]
     from pil_utils.typing import ColorType
 
 MARGIN = 32

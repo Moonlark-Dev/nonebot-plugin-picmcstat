@@ -14,7 +14,10 @@ from mcstatus.motd.components import (
     ParsedMotdComponent,
     WebColor,
 )
-from mcstatus.motd.transformers import PlainTransformer
+try:
+    from mcstatus.motd.transformers import PlainTransformer
+except ModuleNotFoundError:
+    from mcstatus.motd._transformers import PlainTransformer  # type: ignore[no-redef]
 from nonebot import logger
 
 from .config import config
