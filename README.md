@@ -14,9 +14,9 @@
 
 _✨ Minecraft 服务器 MOTD 查询 图片版 ✨_
 
-<img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="python">
-<a href="https://pdm.fming.dev">
-  <img src="https://img.shields.io/badge/pdm-managed-blueviolet" alt="pdm-managed">
+<img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="python">
+<a href="https://github.com/astral-sh/uv">
+  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json" alt="uv">
 </a>
 <a href="https://wakatime.com/badge/user/b61b0f9a-f40b-4c82-bc51-0a75c67bfccf/project/5bc0f141-d1ec-430a-8d21-0e312188fdae">
   <img src="https://wakatime.com/badge/user/b61b0f9a-f40b-4c82-bc51-0a75c67bfccf/project/5bc0f141-d1ec-430a-8d21-0e312188fdae.svg" alt="wakatime">
@@ -172,7 +172,7 @@ plugins = [
   （注意，nb2 以 JSON 格式解析配置项，所以当你要在正则表达式里表示`\`时，你需要将其转义为`\\`）
 - `host` - 要查询的服务器地址，格式为 `<IP>[:端口]`，  
   例如 `hypixel.net` 或 `example.com:1919`
-- `type` - 要查询服务器的类型，`je` 表示 Java 版服，`be` 表示基岩版服
+- `type` - 要查询服务器的类型，`je` 表示 Java 版服，`be` 表示基岩版服，`auto` 代表自动检测
 - `whitelist` - （仅支持 OneBot V11 适配器）群聊白名单，只有里面列出的群号可以查询，可以不填来对所有群开放查询
 
 最终的配置项看起来是这样子的，当你发送 `查服` 时，机器人会把 EaseCation 服务器的状态发送出来
@@ -193,6 +193,15 @@ MCSTAT_SHORTCUTS='
 如果你的服务器在运行 Clash 等拦截了 DNS 解析的软件，且查询部分地址时遇到了问题，请尝试关闭此配置项  
 此配置项不影响 Java 服务器的 SRV 记录解析
 
+### `MCSTAT_RESOLVE_DNS_IPV6` - 是否启用 IPv6 解析
+
+默认：`True`
+
+是否优先使用 IPv6 地址进行查询  
+当启用此配置项时，会优先尝试使用 IPv6 地址进行连接，如连接失败则自动回落到 IPv4  
+如果你的网络环境不支持 IPv6，可以关闭此配置项以避免不必要的等待  
+此配置项仅在 `MCSTAT_RESOLVE_DNS` 启用时生效
+
 ### `MCSTAT_QUERY_TWICE` - 是否查询两遍服务器状态
 
 默认：`True`
@@ -203,6 +212,12 @@ MCSTAT_SHORTCUTS='
 ### `MCSTAT_JAVA_PROTOCOL_VERSION` - Motd Java 服务器时向服务器发送的客户端协议版本
 
 默认：`767`
+
+### `MCSTAT_ENABLE_AUTO_DETECT` - 是否在使用未指定服务器类型的 `motd` 指令时自动检测
+
+默认：`True`
+
+如设为 `False` 将默认指定为 Java 版
 
 ## 🎉 使用
 
@@ -230,6 +245,15 @@ Telegram：[@lgc2333](https://t.me/lgc2333)
 感谢大家的赞助！你们的赞助将是我继续创作的动力！
 
 ## 📝 更新日志
+
+### 0.8.1
+
+- 添加配置项 `MCSTAT_RESOLVE_DNS_IPV6`，用于禁用 IPv6 解析（[#29](https://github.com/lgc-NB2Dev/nonebot-plugin-picmcstat/issues/29)）
+- 当 IPv6 连接失败时自动回落到 IPv4
+
+### 0.8.0
+
+- 加入自动检测服务器类型的功能，默认启用（Thanks to [#28](https://github.com/lgc-NB2Dev/nonebot-plugin-picmcstat/pull/28)）
 
 ### 0.7.1
 
