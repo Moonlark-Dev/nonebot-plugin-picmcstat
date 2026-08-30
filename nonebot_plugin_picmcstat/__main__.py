@@ -20,14 +20,13 @@ async def finish_with_query(ip: str, svr_type: ServerType) -> NoReturn:
         msg = UniMessage("出现未知错误，请检查后台输出")
     else:
         msg = UniMessage.image(raw=ret)
-    await msg.send(reply_to=config.mcstat_reply_target)
+    await msg.send(reply_to=config.reply_target)
     raise FinishedException
-
 
 
 matcher = on_alconna(Alconna(
     "motd",
-    Args["server_type", ServerType, "je"],
+    Args["server_type", ServerType, "auto" if config.enable_auto_detect else "je"],
     Args["address", str],
     meta=CommandMeta(compact=True)
 ))
@@ -35,4 +34,3 @@ matcher = on_alconna(Alconna(
 @matcher.handle()
 async def _(server_type: ServerType, address: str):
     await finish_with_query(address, server_type)
-
