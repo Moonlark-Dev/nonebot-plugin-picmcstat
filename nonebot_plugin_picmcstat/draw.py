@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Optional, TypeAlias, Union, cast
 
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.motd import Motd
-from mcstatus.status_response import JavaStatusResponse
+from mcstatus.responses import JavaStatusResponse
 from nonebot import get_driver
 from nonebot.log import logger
 from PIL.Image import Resampling
@@ -304,7 +304,11 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
     # there're no line spacing in Text2Image since pil-utils 0.2.0
     # so we split lines there then manually add the space
     motd = [
-        transformer.transform(x) for x in split_motd_lines(trim_motd(res.motd.parsed))
+        transformer.transform(x)
+        for x in split_motd_lines(
+            trim_motd(res.motd.parsed),
+            bedrock=res.motd.bedrock,
+        )
     ]
     online_percent = (
         f"{res.players.online / res.players.max * 100:.2f}"
@@ -372,7 +376,11 @@ def draw_java(res: JavaStatusResponse, addr: str) -> BytesIO:
 def draw_bedrock(res: "BedrockStatusResponse", addr: str) -> BytesIO:
     transformer = BBCodeTransformer(bedrock=res.motd.bedrock)
     motd = (
-        transformer.transform(x) for x in split_motd_lines(trim_motd(res.motd.parsed))
+        transformer.transform(x)
+        for x in split_motd_lines(
+            trim_motd(res.motd.parsed),
+            bedrock=res.motd.bedrock,
+        )
     )
     online_percent = (
         f"{int(res.players.online) / int(res.players.max) * 100:.2f}"
@@ -387,7 +395,7 @@ def draw_bedrock(res: "BedrockStatusResponse", addr: str) -> BytesIO:
     if config.show_addr:
         grid.append_line(l_style("测试地址: "), addr)
     grid.append_line(l_style("协议版本: "), str(res.version.protocol))
-    grid.append_line(l_style("游戏版本: "), res.version.version)
+    grid.append_line(l_style("游戏版本: "), res.version.name)
     grid.append_line(
         l_style("当前人数: "),
         f"{res.players.online}/{res.players.max} ({online_percent}%)",

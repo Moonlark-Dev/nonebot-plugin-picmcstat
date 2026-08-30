@@ -7,12 +7,16 @@ from typing import TYPE_CHECKING, TypeVar, cast
 import dns.asyncresolver
 import dns.rdatatype as rd
 from mcstatus.motd.components import (
-    Formatting,
-    MinecraftColor,
+    AnyFormatting,
+    AnyMinecraftColor,
+    BedrockFormatting,
+    BedrockMinecraftColor,
+    JavaFormatting,
+    JavaMinecraftColor,
     ParsedMotdComponent,
     WebColor,
 )
-from mcstatus.motd.transformers import PlainTransformer
+from mcstatus.motd._transformers import PlainTransformer
 from nonebot import logger
 
 from .config import config
@@ -185,12 +189,13 @@ def trim_motd(motd: list[ParsedMotdComponent]) -> list[ParsedMotdComponent]:
     return [x for x in modified_motd if x]
 
 
-def split_motd_lines(motd: Sequence[ParsedMotdComponent]):
+def split_motd_lines(motd: Sequence[ParsedMotdComponent], *, bedrock: bool = False):
     lines: list[list[ParsedMotdComponent]] = []
 
     current_line: list[ParsedMotdComponent] = []
-    using_color: MinecraftColor | WebColor | None = None
-    using_formats: list[Formatting] = []
+    using_color: AnyMinecraftColor | WebColor | None = None
+    using_formats: list[AnyFormatting] = []
+    reset_enum = BedrockFormatting if bedrock else JavaFormatting
 
     for comp in motd:
         if isinstance(comp, str) and "\n" in comp:
@@ -205,7 +210,7 @@ def split_motd_lines(motd: Sequence[ParsedMotdComponent]):
             for line in str_lines:
                 if line:
                     current_line.append(line)
-                current_line.append(Formatting.RESET)
+                current_line.append(reset_enum.RESET)
                 lines.append(current_line)
 
                 current_line = []
@@ -219,11 +224,11 @@ def split_motd_lines(motd: Sequence[ParsedMotdComponent]):
 
             continue
 
-        if isinstance(comp, MinecraftColor | WebColor):
+        if isinstance(comp, (JavaMinecraftColor, BedrockMinecraftColor, WebColor)):
             using_color = comp
 
-        elif isinstance(comp, Formatting):
-            if comp is Formatting.RESET:
+        elif isinstance(comp, (JavaFormatting, BedrockFormatting)):
+            if comp in (JavaFormatting.RESET, BedrockFormatting.RESET):
                 using_color = None
                 using_formats = []
             else:
@@ -254,7 +259,7 @@ class BBCodeTransformer(PlainTransformer):
             text,
         )
 
-    def _handle_minecraft_color(self, element: MinecraftColor, /) -> str:
+    def _handle_minecraft_color(self, element: AnyMinecraftColor, /) -> str:
         stroke_map = ENUM_STROKE_COLOR_BEDROCK if self.bedrock else ENUM_STROKE_COLOR
         color_map = ENUM_CODE_COLOR_BEDROCK if self.bedrock else ENUM_CODE_COLOR
         self.on_reset.append("[/color][/stroke]")
@@ -264,8 +269,8 @@ class BBCodeTransformer(PlainTransformer):
         self.on_reset.append("[/color][/stroke]")
         return f"[stroke={STROKE_COLOR['f']}][color={element.hex}]"
 
-    def _handle_formatting(self, element: Formatting, /) -> str:
-        if element is Formatting.RESET:
+    def _handle_formatting(self, element: AnyFormatting, /) -> str:
+        if element in (JavaFormatting.RESET, BedrockFormatting.RESET):
             to_return = "".join(self.on_reset)
             self.on_reset = []
             return to_return
